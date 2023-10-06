@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="test.cpp" />
+    <ClCompile Include="pch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="test_user_class.h">
+      <Filter>test_user_class</Filter>
+    </ClInclude>
+    <ClInclude Include="user_predicate.h">
+      <Filter>test_user_class</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="filter_iter_test">
+      <UniqueIdentifier>{0f561d08-eeb8-41c8-889e-4482c5ea3d6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test_user_class">
+      <UniqueIdentifier>{a9cdf6b9-9741-44db-b9e8-3f8f809ac698}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
