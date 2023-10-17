@@ -26,7 +26,7 @@ class is_even_number
 public:
 	bool operator()(user_class<value_type> value) const
 	{
-		return value.get_value() % 2;
+		return value.get_value() % 2 == 0;
 	}
 };
 
