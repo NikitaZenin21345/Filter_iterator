@@ -21,7 +21,7 @@ public:
 };
 
 template<class value_type>
-class is_even_number
+class is_even_user_number
 {
 public:
 	bool operator()(user_class<value_type> value) const
@@ -30,3 +30,18 @@ public:
 	}
 };
 
+template<class value_type>
+class is_even_number
+{
+public:
+	bool operator()(value_type value) const
+	{
+		return value % 2 == 0;
+	}
+};
+
+template<class type>
+class is_positive_number {
+public:
+	bool operator()(const type& x) const { return 0 < x; }
+};

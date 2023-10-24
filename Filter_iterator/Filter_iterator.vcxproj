@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="filter_iterator.h" />
     <ClInclude Include="filter_iterator_conditions.h" />
+    <ClInclude Include="filter_iter_exception.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="filter_iterator.cpp" />

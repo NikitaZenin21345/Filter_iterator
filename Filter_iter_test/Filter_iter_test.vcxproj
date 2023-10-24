@@ -34,8 +34,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="test_user_class.h" />
-    <ClInclude Include="user_predicate.h" />
+    <ClInclude Include="tested_user_class.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp" />
