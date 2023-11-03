@@ -2,38 +2,53 @@
 #include <iterator>
 #include "filter_iter_exception.h"
 #include "filter_iterator_conditions.h"
-
 namespace iterators
 {
-	template <class Iterator, class Predicate>
-		requires iter_condition::is_predicate<Predicate, typename std::iterator_traits<Iterator>::value_type>
+	template <bool IsConst, class Iterator, class Predicate>
 	class filter_iterator final
 	{
+		Iterator m_end;
+		Iterator current_iterator;
+		Predicate m_predicate;
+
+		[[nodiscard]] Iterator next_suitable(const Iterator& begin) const noexcept
+		{
+			for (auto iterator = begin; iterator != m_end; ++iterator)
+			{
+				if (m_predicate(*iterator))
+				{
+					return iterator;
+				}
+			}
+			return m_end;
+		}
 	public:
 		using value_type = typename std::iterator_traits<Iterator>::value_type;
 		using reference = typename std::iterator_traits<Iterator>::reference;
 		using pointer = typename std::iterator_traits<Iterator>::pointer;
 		using difference_type = typename std::iterator_traits<Iterator>::difference_type;
 		using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
+		using condition_ref = std::conditional_t<IsConst, std::add_const_t<std::remove_reference_t<reference>>&, reference>;
 
 		filter_iterator() = default;
-		filter_iterator(Iterator begin_, Iterator end_, Predicate predicate_)
+		filter_iterator(const Iterator& m_begin, const Iterator& m_end_, const Predicate& predicate_)
+			:m_end(std::move(m_end_)), m_predicate(std::move(predicate_))
 		{
-			iterator_end = end_;
-			current_iterator = next_suitable(begin_);
-			m_predicate = predicate_;
+			current_iterator = next_suitable(m_begin);
 		}
-		reference operator*() const 
+
+		condition_ref operator*()
 		{
-			if(current_iterator == iterator_end)
+			if (current_iterator == m_end)
 			{
 				throw error_dereferencing_end();
 			}
 			return *current_iterator;
 		}
+
 		filter_iterator& operator++()
 		{
-			if (current_iterator == iterator_end)
+			if (current_iterator == m_end)
 			{
 				throw std::out_of_range("out of range");
 			}
@@ -41,80 +56,64 @@ namespace iterators
 			current_iterator = next_suitable(current_iterator);
 			return *this;
 		}
+
+		filter_iterator& operator++(int)
+		{
+			if (current_iterator == m_end)
+			{
+				throw std::out_of_range("out of range");
+			}
+			auto next_iterator = next_suitable(current_iterator);
+			++current_iterator;
+			return next_iterator;
+		}
+
 		bool operator==(const filter_iterator& other) const noexcept
 		{
 			return current_iterator == other.current_iterator;
 		}
 
-		difference_type operator-(const filter_iterator& other) const {
+		bool operator!=(const filter_iterator& other) const noexcept
+		{
+			return current_iterator != other.current_iterator;
+		}
+
+		difference_type operator-(const filter_iterator& other) const noexcept
+		{
 			return current_iterator - other.current_iterator;
 		}
-
-	private:
-		[[nodiscard]] Iterator next_suitable(const Iterator& begin) const
-		{
-			for (auto iterator = begin; iterator != iterator_end; ++iterator)
-			{
-				if (m_predicate(*iterator))
-				{
-					return iterator;
-				}
-			}
-			return iterator_end;
-		}
-		Predicate m_predicate;
-		Iterator current_iterator;
-		Iterator iterator_end;
 	};
 
-	template <class Iterator>
-	class range final
-	{
-		Iterator first;
-		Iterator last;
-	public:
-		explicit range(Iterator first_, Iterator last_ = Iterator()) :first(first_), last(last_) {}
-		[[nodiscard]] Iterator begin() const noexcept
-		{
-			return first;
-		}
-		[[nodiscard]] Iterator begin() noexcept
-		{
-			return first;
-		}
-		[[nodiscard]] Iterator end() const noexcept
-		{
-			return last;
-		}
-		[[nodiscard]] Iterator end() noexcept
-		{
-			return last;
-		}
-	};
-
-	template <class Iterator, class Predicate>
-		requires iter_condition::is_predicate<Predicate, typename std::iterator_traits<Iterator>::value_type>
+	template < class Iterator, class Predicate>
+		requires iter_condition::is_predicate<Predicate, typename std::iterator_traits<Iterator>::value_type>&&
+			std::input_or_output_iterator<Iterator>
 	class filter_range final
 	{
-		range<Iterator> m_range;
+		Iterator m_begin;
+		Iterator m_end;
 		Predicate m_predicate;
 	public:
-		explicit filter_range(const range<Iterator>& range_,const Predicate& predicate) : m_range(range_), m_predicate(predicate) {}
-		filter_iterator<Iterator, Predicate> begin()  noexcept
+		using iterator = filter_iterator<false, Iterator, Predicate>;
+		using const_iterator = filter_iterator<true, Iterator, Predicate>;
+		
+		explicit filter_range(const Iterator& begin_,const Iterator& end_, const Predicate& predicate) :
+			m_begin(std::move(begin_)), m_end(std::move(end_)), m_predicate(predicate) {}
+
+		[[nodiscard]] iterator begin() noexcept
 		{
-			return filter_iterator<Iterator, Predicate>(m_range.begin(), m_range.end(), m_predicate);
+			return iterator(m_begin, m_end, m_predicate);
 		}
-		[[nodiscard]] filter_iterator<Iterator, Predicate> begin() const noexcept
+		[[nodiscard]] const_iterator cbegin() const noexcept
 		{
-			return filter_iterator<Iterator, Predicate>(m_range.begin(), m_range.end(), m_predicate);
+			return const_iterator(m_begin, m_end, m_predicate);
 		}
-		filter_iterator<Iterator, Predicate> end() noexcept
+		[[nodiscard]] iterator end() noexcept
 		{
-			return filter_iterator<Iterator, Predicate>(m_range.end(), m_range.end(), m_predicate);
+			return iterator(m_end, m_end, m_predicate);
 		}
-		[[nodiscard]] filter_iterator<Iterator, Predicate> end() const noexcept
+		[[nodiscard]] const_iterator cend() const noexcept
 		{
-			return filter_iterator<Iterator, Predicate>(m_range.end(), m_range.end(), m_predicate);
+			return const_iterator(m_end, m_end, m_predicate);
 		}
 	};
 }
